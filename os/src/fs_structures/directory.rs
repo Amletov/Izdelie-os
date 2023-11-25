@@ -3,3 +3,4 @@ pub struct Directory {
     pub inode_number: u32,
     pub extension: [char; 5]
 }
+
