@@ -1,5 +1,7 @@
 use chrono::prelude::*;
+use serde::{Serialize, Deserialize};
 
+#[derive(Serialize, Deserialize)]
 pub struct Inode {
     pub mode: u16,
     pub uid: u16,

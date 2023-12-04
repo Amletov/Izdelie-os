@@ -13,8 +13,12 @@ fn timestamp_u64_to_str(time: &u64) -> String {
 }
 
 fn main() {
-    let inode = Inode::new(0, 0, 0, 0, [0; 9]);
-    let timestamp_str = timestamp_u64_to_str(&inode.ctime);
+    let inode = Inode::new(1, 2, 3, 4, [5; 9]);
+    
+    let encoded: Vec<u8> = bincode::serialize(&inode).unwrap();
+    let decoded: Inode = bincode::deserialize(&encoded[..]).unwrap();
+    
+    let timestamp_str = timestamp_u64_to_str(&decoded.ctime);
 
     println!{"{}",timestamp_str};
 }
