@@ -5,6 +5,7 @@
 
 typedef struct inode
 {
+    u32 id;
     u16 mode;           // Права доступа
     u16 uid;            // ID владельца
     u32 size;           // Размер файла

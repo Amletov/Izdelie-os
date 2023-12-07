@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#define BLOCK_SIZE 512
+
 typedef int8_t  i8;
 typedef int16_t i16;
 typedef int32_t i32;
@@ -12,9 +14,5 @@ typedef uint8_t  u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
 typedef uint64_t u64;
-
-i32 ceil(i32 x, i32 y) {
-    return (x + (y - 1)) / y;
-}
 
 #endif 

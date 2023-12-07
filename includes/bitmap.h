@@ -3,6 +3,7 @@
 
 #include <shared.h>
 #include <stdlib.h>
+#include <math.h>
 
 #define MAP_OUT_OF_RANGE -1
 #define MAP_NULL -2
@@ -15,11 +16,11 @@ typedef struct bitmap
 
 bitmap_t *create_bitmap(i32 capacity)
 {
-    bitmap_t bitmap;
-    bitmap.capacity = capacity;
-    bitmap.maps = (u8 *)calloc(ceil(capacity, sizeof(u8)), sizeof(u8));
+    bitmap_t *bitmap = (bitmap_t *)malloc(sizeof(bitmap_t));
+    bitmap->capacity = capacity;
+    bitmap->maps = (u8 *)calloc(ceil(capacity / sizeof(u8)), sizeof(u8));
 
-    return &bitmap;
+    return bitmap;
 }
 
 int lock_bitmap_element(bitmap_t *bitmap, int index)
@@ -71,7 +72,7 @@ int is_bitmap_element_locked(bitmap_t *bitmap, int index)
 
     int map_index = index / bitmap->capacity;
     i8 in_map_index = index % (sizeof(u8) * 8);
-    
+
     return (bitmap->maps[map_index] & 1 << in_map_index) != 0;
 }
 
