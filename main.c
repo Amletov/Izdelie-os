@@ -5,6 +5,7 @@
 #include <superblock.h>
 #include <file_system.h>
 #include <terminal.h>
+#include <kernel.h>
 
 int correct_exit(int sig)
 {
@@ -54,7 +55,7 @@ int main(int, char **)
         printf("Invalid option! P");
         correct_exit(0);
     }
-    
+    init_kernel();
     run();
     
     // create_disk(2049, "mazhan");

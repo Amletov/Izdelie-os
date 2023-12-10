@@ -11,6 +11,9 @@ int init_fs(int size, const char *file_name)
 
     int allocated_blocks = 0;
     superblock_t superblock;
+
+    superblock.magic_number = MAGIC_NUMBER;
+
     allocated_blocks += 1;
 
     superblock.total_blocks = total_size / BLOCK_SIZE;
@@ -52,6 +55,10 @@ int init_fs(int size, const char *file_name)
     {
         inode_t inode;
         inode.id = i;
+        for(int j = 0; j < 9; ++j)
+        {
+            inode.addreses[j] = -1;
+        }
         write_n((superblock.first_inode_block * BLOCK_SIZE) + i * sizeof(inode_t), sizeof(inode_t), (void *)&inode);
     }
 }

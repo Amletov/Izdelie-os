@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <terminal.h>
+#include <kernel.h>
 
 #define MEM_SIZE 1024
 
@@ -80,10 +81,20 @@ int run()
         printf("\nТаков Путь: ");
         fgets(prompt, MEM_SIZE, stdin);
         argv = parsedargs(prompt, &argc);
-        for (int i = 0; i < argc; i++)
-        {
-            printf("argv[%d] = %s\n", i, argv[i]);
+        if (argc < 1) {
+            continue;
         }
+        if (strcmp(argv[0], "mkfile") == 0)
+        {
+            mkfile(argc, argv);
+        }
+        else if (strcmp(argv[0], "sb") == 0)
+        {
+            sb(argc, argv);
+        }
+        
+        
         freeparsedargs(argv);
+
     }
 }

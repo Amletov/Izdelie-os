@@ -2,6 +2,7 @@
 #define SUPERBLOCK_H
 
 #include <shared.h>
+#define MAGIC_NUMBER 1337
 // u16 block_size;         // Размер одного блока
 //     u32 first_block;        // Номер первого блока
 //     u64 total_blocks;       // Размер ФС в блоках
@@ -20,6 +21,7 @@ typedef struct superblock
     u32 first_bitmap_block;  // Размер битовой карты св./з. блоков
     u32 first_bitmap_inode;  // Размер битовой карты св./з. inode
     u32 first_inode_block;
+    u32 magic_number;
 } superblock_t;
 
 #endif 
