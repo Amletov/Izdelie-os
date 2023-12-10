@@ -110,6 +110,26 @@ int relative_block(inode_t *inode, int offset)
     return inode->addreses[offset / BLOCK_SIZE];
 }
 
+int read_bytes(inode_t *inode, int offset, void *buffer)
+{
+    int block_id = relative_block(inode, offset);
+    int bytes_to_read = (inode->size - offset) > BLOCK_SIZE ? BLOCK_SIZE : inode->size - offset;
+    read_n(block_id * BLOCK_SIZE, bytes_to_read, buffer);
+
+    return bytes_to_read + bytes_to_read == BLOCK_SIZE ? read_bytes(inode, offset + bytes_to_read, buffer + bytes_to_read) : 0;
+}
+
+int read_bytes_start(inode_t *inode, void *buffer)
+{
+    int block_id = relative_block(inode, 0);
+    printf("\tREADING BYTES from %d: ", block_id);
+    int bytes_to_read = inode->size > BLOCK_SIZE ? BLOCK_SIZE : inode->size;
+    printf("bytes to read - %d\n", bytes_to_read);
+    read_n(block_id * BLOCK_SIZE, bytes_to_read, buffer);
+
+    return bytes_to_read + (bytes_to_read > BLOCK_SIZE ? read_bytes(inode, bytes_to_read, buffer + bytes_to_read) : 0);
+}
+
 int write_bytes(inode_t *inode, int offset, int size, void *buffer)
 {
     if (offset > 9 * BLOCK_SIZE)
@@ -141,6 +161,46 @@ inode_t *get_inode(int inode_id)
     return inode;
 }
 
+int read_directory(dentry_t *dentry, int *nitems, dentry_t *items)
+{
+    printf("\tGetting inode\n");
+    inode_t *inode = get_inode(dentry->inode_id);
+    printf("\tINODE:\n");
+    printf("\t\tid: %d\n", inode->id);
+    printf("\t\tsize: %d\n", inode->size);
+    printf("\t\tfirst block: %d\n", inode->addreses[0]);
+    char buffer[inode->size];
+    printf("\tReading directory content\n");
+    int read_b = read_bytes_start(inode, buffer);
+    char *p = buffer;
+    printf("\tRead bytes: %db\n", read_b);
+    memcpy(&dentry->inode_id, p, sizeof(int));
+    p += sizeof(int);
+    printf("\tInode id copied\n");
+    memcpy(&dentry->parent_inode_id, p, sizeof(int));
+    p += sizeof(int);
+    printf("\tParent inode id copied\n");
+    memcpy(dentry->name, p, sizeof(dentry->name));
+    p += sizeof(dentry->name);
+    printf("\tName copied\n");
+    memcpy(nitems, p, sizeof(int));
+    p += sizeof(int);
+    printf("\tNitems copied - %d\n", *nitems);
+
+    items = realloc(items, sizeof(dentry_t) * (*nitems));
+
+    for (int i = 0; i < *nitems; i++)
+    {
+        dentry_t item;
+        item.parent_inode_id = inode->id;
+        memcpy(&item.inode_id, p, sizeof(int));
+        memcpy(item.name, p + 4, sizeof(dentry->name));
+        p += 4 + 12;
+        items[i] = item;
+    }
+    free(inode);
+}
+
 int save_directory(dentry_t *dentry, int nitems, dentry_t *items)
 {
     int buffer_size = 4 + 4 + 12 + nitems * (4 + 12);
@@ -152,6 +212,8 @@ int save_directory(dentry_t *dentry, int nitems, dentry_t *items)
     p += sizeof(int);
     memcpy(p, dentry->name, sizeof(dentry->name));
     p += sizeof(dentry->name);
+    memcpy(p, &nitems, sizeof(int));
+    p += sizeof(int);
 
     for (int i = 0; i < nitems; i++)
     {
@@ -199,7 +261,7 @@ int init_kernel()
     {
         allocate_block();
     }
-    
+
     printf("\tAllocating inode\n");
     inode_t *root = allocate_inode();
     printf("\tAllocated inode:\n\t\tid: %d\n\t\taflags: %d\n", root->id, root->mode);
@@ -228,5 +290,15 @@ int sb(int argc, char **argv)
     printf("\tfree blocks: %d\n", superblock.free_blocks);
     printf("\ttotal blocks: %d\n", superblock.total_blocks);
     printf("\ttotal inodes: %d\n", superblock.total_inodes);
+    return;
+}
+
+int ls(int argc, char **argv)
+{
+    read_directory(&current_dentry, &current_dir_items_count, current_dir_items);
+    for (int i = 0; i < current_dir_items_count; ++i)
+    {
+        printf("%s\n", current_dir_items[i].name);
+    }
     return;
 }

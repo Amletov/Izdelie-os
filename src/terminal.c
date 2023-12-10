@@ -92,6 +92,10 @@ int run()
         {
             sb(argc, argv);
         }
+        else if (strcmp(argv[0], "ls") ==0)
+        {
+            ls(argc, argv);
+        }
         
         
         freeparsedargs(argv);
