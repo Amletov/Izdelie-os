@@ -4,10 +4,12 @@
 #include <signal.h>
 #include <superblock.h>
 #include <file_system.h>
+#include <terminal.h>
 
 int correct_exit(int sig)
 {
     close_disk();
+    exit(sig);
 }
 
 int main(int, char **)
@@ -45,13 +47,15 @@ int main(int, char **)
         printf("Fine... I gotta work to do.\n");
 
         init_fs(size, name);
+        
     }
-    // else (!choice)
-    // {
-    //     printf("Invalid option! P");
-    // }
+    else
+    {
+        printf("Invalid option! P");
+        correct_exit(0);
+    }
     
-
+    run();
     
     // create_disk(2049, "mazhan");
     // mount_disk("mazhan");
