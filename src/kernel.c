@@ -27,7 +27,7 @@ int find_free_block()
     for (int i = 0; i < superblock.total_blocks; i += 8)
     {
         u8 bitmap;
-        read_n(superblock.first_bitmap_block + i / 8, sizeof(u8), &bitmap);
+        read_n(superblock.first_bitmap_block * BLOCK_SIZE + (i / 8), sizeof(u8), &bitmap);
         for (int j = 0; j < 8; j++)
         {
             if ((bitmap & 1 << j) == 0)
@@ -39,12 +39,17 @@ int find_free_block()
     return KRNL_ERROR_OUT_OF_BLOCKS;
 }
 
+char *get_path()
+{
+    return current_dentry.name;
+}
+
 int find_free_inode()
 {
     for (int i = 0; i < superblock.total_inodes; i += 8)
     {
         u8 bitmap;
-        read_n(superblock.first_bitmap_inode + i / 8, sizeof(u8), &bitmap);
+        read_n(superblock.first_bitmap_inode * BLOCK_SIZE + i / 8, sizeof(u8), &bitmap);
         for (int j = 0; j < 8; j++)
         {
             if ((bitmap & 1 << j) == 0)
@@ -64,8 +69,9 @@ int allocate_block()
         return KRNL_ERROR_OUT_OF_BLOCKS;
     }
     u8 bitmap;
-    read_n(superblock.first_bitmap_block + block_id / 8, sizeof(u8), &bitmap);
+    read_n(superblock.first_bitmap_block * BLOCK_SIZE + (block_id / 8), sizeof(u8), &bitmap);
     bitmap |= 1 << (block_id % 8);
+    write_n(superblock.first_bitmap_block * BLOCK_SIZE + (block_id / 8), sizeof(u8), &bitmap);
     return block_id;
 }
 
@@ -83,9 +89,9 @@ inode_t *allocate_inode()
     }
 
     u8 bitmap;
-    read_n(superblock.first_bitmap_inode + inode_id / 8, sizeof(u8), &bitmap);
+    read_n(superblock.first_bitmap_inode * BLOCK_SIZE + inode_id / 8, sizeof(u8), &bitmap);
     bitmap |= 1 << (inode_id % 8);
-    write_n(superblock.first_bitmap_inode + inode_id / 8, sizeof(u8), &bitmap);
+    write_n(superblock.first_bitmap_inode * BLOCK_SIZE + inode_id / 8, sizeof(u8), &bitmap);
 
     inode_t *inode = malloc(sizeof(inode_t));
     inode->id = inode_id;
@@ -188,8 +194,15 @@ int init_kernel()
     {
         return KRNL_ERROR;
     }
+    printf("\tAllocating system blocks\n");
+    for (int i = 0; i < superblock.first_block; i++)
+    {
+        allocate_block();
+    }
+    
     printf("\tAllocating inode\n");
     inode_t *root = allocate_inode();
+    printf("\tAllocated inode:\n\t\tid: %d\n\t\taflags: %d\n", root->id, root->mode);
     printf("\tSetting inode directory flag\n");
     set_inode_dir_flag(root);
     printf("\tSetting inode system flag\n");
@@ -215,6 +228,5 @@ int sb(int argc, char **argv)
     printf("\tfree blocks: %d\n", superblock.free_blocks);
     printf("\ttotal blocks: %d\n", superblock.total_blocks);
     printf("\ttotal inodes: %d\n", superblock.total_inodes);
-    
     return;
 }

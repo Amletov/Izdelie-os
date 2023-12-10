@@ -27,7 +27,7 @@ int align(int raw_size)
 
 int create_disk(int size, const char *file_name)
 {
-    if ((file_descriptor = open(file_name, O_CREAT | O_RDWR, 0666)) == -1)
+    if ((file_descriptor = open(file_name, O_CREAT | O_RDWR | O_TRUNC, 0666)) == -1)
     {
         fail("shm_open");
     }
@@ -83,6 +83,7 @@ int write_blocks(int start_block, int nblocks, void *buffer)
 
 int write_n(int offset, int size, char *buffer)
 {
+    printf("\t\tWRITING offset: %d, size: %d\n", offset, size);
     lseek(file_descriptor, offset, SEEK_SET);
     write(file_descriptor, buffer, size);
     fsync(file_descriptor);
@@ -91,7 +92,8 @@ int write_n(int offset, int size, char *buffer)
 }
 
 int read_n(int offset, int size, char *buffer)
-{
+{   
+    printf("\t\tREADING offset: %d, size: %d\n", offset, size);
     lseek(file_descriptor, offset, SEEK_SET);
     read(file_descriptor, buffer, size);
 

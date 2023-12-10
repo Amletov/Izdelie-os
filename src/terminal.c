@@ -78,7 +78,7 @@ int run()
         // int c;
         // while ((c = getchar()) != '\n' && c != EOF)
         //     ;
-        printf("\nТаков Путь: ");
+        printf("\n%s: ", get_path());
         fgets(prompt, MEM_SIZE, stdin);
         argv = parsedargs(prompt, &argc);
         if (argc < 1) {

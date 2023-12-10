@@ -17,7 +17,7 @@ int init_fs(int size, const char *file_name)
     allocated_blocks += 1;
 
     superblock.total_blocks = total_size / BLOCK_SIZE;
-    superblock.total_inodes = total_size / 100;
+    superblock.total_inodes = total_size / 300;
 
     superblock.first_bitmap_block = allocated_blocks;
     allocated_blocks += align(sizeof(u8) * ceil((double)superblock.total_blocks / 8)) / BLOCK_SIZE;
@@ -26,7 +26,7 @@ int init_fs(int size, const char *file_name)
     allocated_blocks += align(sizeof(u8) * ceil((double)superblock.total_inodes / 8)) / BLOCK_SIZE;
 
     superblock.first_inode_block = allocated_blocks;
-    allocated_blocks += align(sizeof(inode_t) * ceil((double)superblock.total_inodes / sizeof(inode_t))) / BLOCK_SIZE;
+    allocated_blocks += align(sizeof(inode_t) * superblock.total_inodes) / BLOCK_SIZE;
 
     superblock.first_block = allocated_blocks;
     superblock.block_size = BLOCK_SIZE;
