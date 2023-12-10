@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <fcntl.h>
@@ -38,12 +39,7 @@ int create_disk(int size, const char *file_name)
         fail("ftruncate");
     }
 
-    if ((memory_mapped_file_pointer = mmap(0, total_file_size, PROT_READ | PROT_WRITE, MAP_SHARED, file_descriptor, 0)) == MAP_FAILED)
-    {
-        fail("mmap");
-    }
-
-    close(file_descriptor);
+    fsync(file_descriptor);
 
     printf("Disk created\n");
     return total_file_size;
@@ -61,14 +57,7 @@ int mount_disk(const char *file_name)
     stat(file_name, &st);
     total_file_size = st.st_size;
 
-    if ((memory_mapped_file_pointer = mmap(0, total_file_size, PROT_READ | PROT_WRITE, MAP_SHARED, file_descriptor, 0)) == MAP_FAILED)
-    {
-        fail("mmap");
-    }
-
     printf("size: %d\n", total_file_size);
-
-    close(file_descriptor);
 
     printf("Disk mounted\n");
     return 0;
@@ -76,7 +65,13 @@ int mount_disk(const char *file_name)
 
 int read_blocks(int start_block, int nblocks, void *buffer)
 {
+    if ((memory_mapped_file_pointer = mmap(0, total_file_size, PROT_READ | PROT_WRITE, MAP_SHARED, file_descriptor, 0)) == MAP_FAILED)
+    {
+        fail("mmap");
+    }
+
     memcpy(buffer, memory_mapped_file_pointer + (start_block * nblocks), nblocks * BLOCK_SIZE);
+
     return 0;
 }
 
@@ -88,12 +83,23 @@ int write_blocks(int start_block, int nblocks, void *buffer)
 
 int write_n(int offset, int size, char *buffer)
 {
-    memcpy(memory_mapped_file_pointer + offset, buffer, size);
+    lseek(file_descriptor, offset, SEEK_SET);
+    write(file_descriptor, buffer, size);
+    fsync(file_descriptor);
+
+    return 0;
+}
+
+int read_n(int offset, int size, char *buffer)
+{
+    lseek(file_descriptor, offset, SEEK_SET);
+    read(file_descriptor, buffer, size);
+
     return 0;
 }
 
 int close_disk()
 {
     printf("Closing disk\n");
-    munmap(memory_mapped_file_pointer, total_file_size);
+    close(file_descriptor);
 }
