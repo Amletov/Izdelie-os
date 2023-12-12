@@ -28,6 +28,7 @@ int align(int raw_size)
 
 int create_disk(int size, const char *file_name)
 {
+    strcat(file_name, ".ufc");
     if ((file_descriptor = open(file_name, O_CREAT | O_RDWR | O_TRUNC, 0666)) == -1)
     {
         fail("shm_open");

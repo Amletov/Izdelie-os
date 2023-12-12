@@ -1,6 +1,7 @@
 bin/
 CMakeFiles/
 index/
+*.ufc
 CPackConfig.cmake
 CPackSourceConfig.cmake
 os
