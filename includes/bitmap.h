@@ -1,9 +1,9 @@
 #ifndef BITMAP_H
 #define BITMAP_H
 
-#include <shared.h>
 #include <stdlib.h>
 #include <math.h>
+#include "shared.h"
 
 #define MAP_OUT_OF_RANGE -1
 #define MAP_NULL -2

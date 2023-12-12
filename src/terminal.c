@@ -1,22 +1,11 @@
 #include <stdio.h>
 #include <string.h>
-#include <terminal.h>
-#include <kernel.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include "kernel.h"
+#include "terminal.h"
 
 #define MEM_SIZE 1024
-
-// void get_args(char *prompt, char **argv, int *argc)
-// {
-//     int c = 0;
-//     char *p = strtok(prompt, " ");
-//     while (p != NULL)
-//     {
-//         argv[c] = malloc(strlen(p));
-//         strcpy(argv[c++], p);
-//         p = strtok(NULL, " ");
-//     }
-//     *argc = c;
-// }
 
 static int setargs(char *args, char **argv)
 {
@@ -75,13 +64,11 @@ int run()
 
     while (is_running)
     {
-        // int c;
-        // while ((c = getchar()) != '\n' && c != EOF)
-        //     ;
         printf("\n%s: ", get_path());
         fgets(prompt, MEM_SIZE, stdin);
         argv = parsedargs(prompt, &argc);
-        if (argc < 1) {
+        if (argc < 1)
+        {
             continue;
         }
         if (strcmp(argv[0], "mkfile") == 0)
@@ -92,13 +79,11 @@ int run()
         {
             sb(argc, argv);
         }
-        else if (strcmp(argv[0], "ls") ==0)
+        else if (strcmp(argv[0], "ls") == 0)
         {
             ls(argc, argv);
         }
-        
-        
-        freeparsedargs(argv);
 
+        freeparsedargs(argv);
     }
 }

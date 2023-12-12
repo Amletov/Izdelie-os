@@ -5,8 +5,9 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <fcntl.h>
+#include "disk_emulator.h"
+#include "shared.h"
 
-#include <disk_emulator.h>
 
 #define DISK_ERROR -1
 
@@ -57,9 +58,14 @@ int mount_disk(const char *file_name)
     stat(file_name, &st);
     total_file_size = st.st_size;
 
-    printf("size: %d\n", total_file_size);
+    printf("Disk mounted. Name - \"%s\", size - %db.\n", file_name, total_file_size);
 
-    printf("Disk mounted\n");
+    return 0;
+}
+
+int write_blocks(int start_block, int nblocks, void *buffer)
+{
+    memcpy(memory_mapped_file_pointer + (start_block * nblocks), buffer, nblocks * BLOCK_SIZE);
     return 0;
 }
 
@@ -75,15 +81,10 @@ int read_blocks(int start_block, int nblocks, void *buffer)
     return 0;
 }
 
-int write_blocks(int start_block, int nblocks, void *buffer)
-{
-    memcpy(memory_mapped_file_pointer + (start_block * nblocks), buffer, nblocks * BLOCK_SIZE);
-    return 0;
-}
-
 int write_n(int offset, int size, char *buffer)
 {
     printf("\t\tWRITING offset: %d, size: %d\n", offset, size);
+
     lseek(file_descriptor, offset, SEEK_SET);
     write(file_descriptor, buffer, size);
     fsync(file_descriptor);
@@ -94,6 +95,7 @@ int write_n(int offset, int size, char *buffer)
 int read_n(int offset, int size, char *buffer)
 {   
     printf("\t\tREADING offset: %d, size: %d\n", offset, size);
+
     lseek(file_descriptor, offset, SEEK_SET);
     read(file_descriptor, buffer, size);
 
@@ -102,6 +104,6 @@ int read_n(int offset, int size, char *buffer)
 
 int close_disk()
 {
-    printf("Closing disk\n");
+    printf("\nClosing disk\n");
     close(file_descriptor);
 }

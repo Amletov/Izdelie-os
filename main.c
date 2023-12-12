@@ -1,68 +1,60 @@
-#include <stdio.h>
-#include <inode.h>
-#include <stdlib.h>
-#include <signal.h>
-#include <superblock.h>
+#include <disk_emulator.h>
 #include <file_system.h>
-#include <terminal.h>
+#include <inode.h>
 #include <kernel.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <superblock.h>
+#include <terminal.h>
 
-int correct_exit(int sig)
-{
-    close_disk();
-    exit(sig);
+void correct_exit(int sig) {
+  close_disk();
+  exit(sig);
 }
 
-int main(int, char **)
-{
-    if (signal(SIGINT, &correct_exit) == SIG_ERR)
-    {
-        perror("signal");
-        exit(EXIT_FAILURE);
+int main() {
+  if (signal(SIGINT, correct_exit) == SIG_ERR) {
+    perror("signal");
+    exit(EXIT_FAILURE);
+  }
 
-    }
-    
-    printf("Hi, my name is Denis Perviy. I'm a student from DPI(7000). Welcome to this FS is my course work on C lang (Ш ланг)\n");
-    printf("Please, choose an option:\n");
-    printf("1 - Init file system\n");
-    printf("2 - Mount file system\n");
-    printf("Exit - Ctrl + C\n");
+  printf("Please, choose an option:\n");
+  printf("1 - Init file system\n");
+  printf("2 - Mount file system\n");
+  printf("Exit - Ctrl + C\n");
 
-    int choice = 0;
+  int choice = 0;
 
-    scanf("%d", &choice);
+  scanf("%d", &choice);
 
-    if (choice == 1)
-    {
-        printf("You have chosen an \"Init file system\" option.\n");
-        printf("Sir, enter the disk name in range of 12 characters, please: ");
+  if (choice == 1) {
+    printf("You have chosen an \"Init file system\" option.\n");
+    printf("Sir, enter the disk name in range of 12 characters, please: ");
 
-        char name[12];
-        scanf("%s", name);
+    char name[12];
+    scanf("%s", name);
 
-        printf("Very well.\n");
-        printf("Now, select the size of the disk: ");
+    printf("Very well.\n");
+    printf("Now, select the size of the disk: ");
 
-        int size;
-        scanf("%d", &size);
-        printf("Fine... I gotta work to do.\n");
+    int size;
+    scanf("%d", &size);
+    printf("Fine... I gotta work to do.\n");
 
-        init_fs(size, name);
-        
-    }
-    else
-    {
-        printf("Invalid option! P");
-        correct_exit(0);
-    }
-    init_kernel();
-    run();
-    
-    // create_disk(2049, "mazhan");
-    // mount_disk("mazhan");
+    init_fs(size, name);
 
-    // inode_t inode = create_inode(1);
-    // superblock_t block;
-    // printf("%d\n", inode.id);
+  } else {
+    printf("Invalid option! P");
     correct_exit(0);
+  }
+  init_kernel();
+  run();
+
+  // create_disk(2049, "mazhan");
+  // mount_disk("mazhan");
+  // inode_t inode = create_inode(1);
+  // superblock_t block;
+  // printf("%d\n", inode.id);
+  correct_exit(0);
 }

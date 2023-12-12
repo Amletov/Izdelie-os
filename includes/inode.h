@@ -1,7 +1,7 @@
 #ifndef INODE_H
 #define INODE_H
 
-#include <shared.h>
+#include "shared.h"
 
 #define I_DIR 128
 #define I_SYS 64
@@ -22,5 +22,4 @@ int set_inode_mode(inode_t *inode, int owner_permissions, int others_permissions
 void set_inode_dir_flag(inode_t *inode);
 void set_inode_system_flag(inode_t *inode);
 
-#endif 
-
+#endif

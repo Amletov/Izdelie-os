@@ -4,6 +4,7 @@
 #include <file_system.h>
 #include <superblock.h>
 #include <disk_emulator.h>
+#include "inode.h"
 
 int init_fs(int size, const char *file_name)
 {
