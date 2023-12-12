@@ -29,19 +29,21 @@ int main() {
   scanf("%d", &choice);
 
   if (choice == 1) {
-    printf("You have chosen an \"Init file system\" option.\n");
-    printf("Sir, enter the disk name in range of 12 characters, please: ");
+    // printf("You have chosen an \"Init file system\" option.\n");
+    // printf("Sir, enter the disk name in range of 12 characters, please: ");
 
-    char name[12];
-    scanf("%s", name);
+    // char name[12];
+    // scanf("%s", name);
 
-    printf("Very well.\n");
-    printf("Now, select the size of the disk: ");
+    // printf("Very well.\n");
+    // printf("Now, select the size of the disk: ");
 
-    int size;
-    scanf("%d", &size);
-    printf("Fine... I gotta work to do.\n");
+    // int size;
+    // scanf("%d", &size);
+    // printf("Fine... I gotta work to do.\n");
 
+    const char name[] = "lol";
+    int size = 8192;
     init_fs(size, name);
 
   } else {

@@ -7,7 +7,7 @@
 
 #define MEM_SIZE 1024
 
-static int setargs(char *args, char **argv)
+static int set_args(char *args, char **argv)
 {
     int count = 0;
 
@@ -28,15 +28,15 @@ static int setargs(char *args, char **argv)
     return count;
 }
 
-char **parsedargs(char *args, int *argc)
+char **parsed_args(char *args, int *argc)
 {
     char **argv = NULL;
     int argn = 0;
 
-    if (args && *args && (args = strdup(args)) && (argn = setargs(args, NULL)) && (argv = malloc((argn + 1) * sizeof(char *))))
+    if (args && *args && (args = strdup(args)) && (argn = set_args(args, NULL)) && (argv = malloc((argn + 1) * sizeof(char *))))
     {
         *argv++ = args;
-        argn = setargs(args, argv);
+        argn = set_args(args, argv);
     }
 
     if (args && !argv)
@@ -46,7 +46,7 @@ char **parsedargs(char *args, int *argc)
     return argv;
 }
 
-void freeparsedargs(char **argv)
+void free_parsed_args(char **argv)
 {
     if (argv)
     {
@@ -66,7 +66,7 @@ int run()
     {
         printf("\n%s: ", get_path());
         fgets(prompt, MEM_SIZE, stdin);
-        argv = parsedargs(prompt, &argc);
+        argv = parsed_args(prompt, &argc);
         if (argc < 1)
         {
             continue;
@@ -83,7 +83,11 @@ int run()
         {
             ls(argc, argv);
         }
+        else if (strcmp(argv[0], "mkdir") == 0)
+        {
+            mkdir(argc, argv);
+        }
 
-        freeparsedargs(argv);
+        free_parsed_args(argv);
     }
 }

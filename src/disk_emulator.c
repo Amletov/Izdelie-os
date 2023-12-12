@@ -63,27 +63,9 @@ int mount_disk(const char *file_name)
     return 0;
 }
 
-int write_blocks(int start_block, int nblocks, void *buffer)
-{
-    memcpy(memory_mapped_file_pointer + (start_block * nblocks), buffer, nblocks * BLOCK_SIZE);
-    return 0;
-}
-
-int read_blocks(int start_block, int nblocks, void *buffer)
-{
-    if ((memory_mapped_file_pointer = mmap(0, total_file_size, PROT_READ | PROT_WRITE, MAP_SHARED, file_descriptor, 0)) == MAP_FAILED)
-    {
-        fail("mmap");
-    }
-
-    memcpy(buffer, memory_mapped_file_pointer + (start_block * nblocks), nblocks * BLOCK_SIZE);
-
-    return 0;
-}
-
 int write_n(int offset, int size, char *buffer)
 {
-    printf("\t\tWRITING offset: %d, size: %d\n", offset, size);
+    // printf("\t\tWRITING offset: %d, size: %d\n", offset, size);
 
     lseek(file_descriptor, offset, SEEK_SET);
     write(file_descriptor, buffer, size);
@@ -94,7 +76,7 @@ int write_n(int offset, int size, char *buffer)
 
 int read_n(int offset, int size, char *buffer)
 {   
-    printf("\t\tREADING offset: %d, size: %d\n", offset, size);
+    // printf("\t\tREADING offset: %d, size: %d\n", offset, size);
 
     lseek(file_descriptor, offset, SEEK_SET);
     read(file_descriptor, buffer, size);

@@ -21,5 +21,6 @@ typedef struct inode
 int set_inode_mode(inode_t *inode, int owner_permissions, int others_permissions);
 void set_inode_dir_flag(inode_t *inode);
 void set_inode_system_flag(inode_t *inode);
+void display_inode(inode_t *inode);
 
 #endif
