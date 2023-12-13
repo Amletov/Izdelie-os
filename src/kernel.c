@@ -27,7 +27,7 @@ int relative_block(inode_t *inode, int offset) {
 }
 
 int save_inode(inode_t *inode) {
-  //printf("save_inode\n");
+  // printf("save_inode\n");
   int offset =
       superblock.first_inode_block * BLOCK_SIZE + inode->id * sizeof(inode_t);
   inode->mtime = (u64)time(NULL);
@@ -66,7 +66,7 @@ int find_free_inode() {
 }
 
 int allocate_block() {
-  //printf("allocate_block\n");
+  // printf("allocate_block\n");
   int block_id = find_free_block();
   if (block_id == KRNL_ERROR_OUT_OF_BLOCKS) {
     return KRNL_ERROR_OUT_OF_BLOCKS;
@@ -82,7 +82,7 @@ int allocate_block() {
 }
 
 inode_t *allocate_inode() {
-  //printf("allocate_inode\n");
+  // printf("allocate_inode\n");
   int inode_id, block_id, offset;
 
   inode_id = find_free_inode();
@@ -155,6 +155,10 @@ int write_bytes(inode_t *inode, int offset, int size, void *buffer) {
     return KRNL_ERROR;
   }
 
+  for (int i = 0; i < size; ++i) {
+    printf("%d ", (int)*(char *)(buffer + i));
+  }
+
   char block[BLOCK_SIZE];
   int relative_block_id = relative_block(inode, offset);
 
@@ -179,19 +183,19 @@ int write_bytes(inode_t *inode, int offset, int size, void *buffer) {
           buffer);
 
   inode->size += available_space;
+  inode->mtime = (u64)time(NULL);
   save_inode(inode);
 
   if (available_space + size > BLOCK_SIZE - relative_offset) {
     write_bytes(inode, offset + available_space, size - available_space,
                 buffer + available_space);
   }
-  inode->mtime = (u64)time(NULL);
 
   return 0;
 }
 
 inode_t *get_inode(int inode_id) {
-  //printf("get_inode\n");
+  // printf("get_inode\n");
   int offset =
       superblock.first_inode_block * BLOCK_SIZE + inode_id * sizeof(inode_t);
   inode_t *inode = malloc(sizeof(inode_t));
@@ -201,30 +205,34 @@ inode_t *get_inode(int inode_id) {
   return inode;
 }
 
-int read_directory(dentry_t *dentry, int *nitems, dentry_t *items) {
+int read_directory(dentry_t *dentry, dentry_t *items) {
   inode_t *inode = get_inode(dentry->inode_id);
-
+  int nitems = 0;
   char buffer[inode->size];
   printf("\tReading directory content\n");
   int read_b = read_bytes_start(inode, buffer);
+  // for (char *bp = buffer; bp != NULL; ++bp) {
+  //   printf("%d ", (int)*bp);
+  // }
+  // printf("\n");
   char *p = buffer;
   printf("\tRead bytes: %db\n", read_b);
   memcpy(&dentry->inode_id, p, sizeof(int));
   p += sizeof(int);
-  printf("\tInode id copied\n");
+  printf("\tInode id copied %d\n", dentry->inode_id);
   memcpy(&dentry->parent_inode_id, p, sizeof(int));
   p += sizeof(int);
-  printf("\tParent inode id copied\n");
+  printf("\tParent inode id copied %d\n", dentry->parent_inode_id);
   memcpy(dentry->name, p, sizeof(dentry->name));
   p += sizeof(dentry->name);
-  printf("\tName copied\n");
-  memcpy(nitems, p, sizeof(int));
+  printf("\tName copied %s\n", dentry->name);
+  memcpy(&nitems, p, sizeof(int));
   p += sizeof(int);
-  printf("\tNitems copied - %d\n", *nitems);
+  printf("\tNitems copied - %d\n", nitems);
 
-  items = realloc(items, sizeof(dentry_t) * (*nitems));
+  items = realloc(items, sizeof(dentry_t) * (nitems));
 
-  for (int i = 0; i < *nitems; i++) {
+  for (int i = 0; i < nitems; i++) {
     dentry_t item;
     item.parent_inode_id = inode->id;
     memcpy(&item.inode_id, p, sizeof(int));
@@ -234,18 +242,18 @@ int read_directory(dentry_t *dentry, int *nitems, dentry_t *items) {
   }
   free(inode);
 
-  return 0;
+  return nitems;
 }
 
 int save_directory(dentry_t *dentry, int nitems, dentry_t *items) {
-  int buffer_size = 4 + 4 + 12 + nitems * (4 + 12);
+  int buffer_size = 4 + 4 + 12 + nitems * (4 + 12) + 4;
   char buffer[buffer_size];
   char *p = buffer;
   memcpy(p, &dentry->inode_id, sizeof(int));
   p += sizeof(int);
   memcpy(p, &dentry->parent_inode_id, sizeof(int));
   p += sizeof(int);
-  memcpy(p, dentry->name, sizeof(dentry->name));
+  memcpy(p, dentry->name, 12);
   p += sizeof(dentry->name);
   memcpy(p, &nitems, sizeof(int));
   p += sizeof(int);
@@ -294,7 +302,7 @@ int init_kernel() {
 }
 
 int mkdir(int argc, char **argv) {
-  //printf("mkdir\n");
+  // printf("mkdir\n");
   int inode_id = mkfile(argc, argv);
   if (inode_id == ARG_ERROR) {
     return ARG_ERROR;
@@ -309,7 +317,7 @@ int mkdir(int argc, char **argv) {
 }
 
 int mkfile(int argc, char **argv) {
-  //printf("mkfile\n");
+  // printf("mkfile\n");
   if (argc < 2) {
     printf("\033[31mUSAGE: mkfile/mkdir <path_to_file>\033[0m\n");
     return ARG_ERROR;
@@ -350,7 +358,7 @@ int sb(int argc, char **argv) {
 }
 
 int ls(int argc, char **argv) {
-  read_directory(&current_dentry, &current_dir_items_count, current_dir_items);
+  current_dir_items_count = read_directory(&current_dentry, current_dir_items);
   printf("inode_id\tname\tsize\tmode\tcreation_date\tmodification_date\n");
 
   for (int i = 0; i < current_dir_items_count; ++i) {
