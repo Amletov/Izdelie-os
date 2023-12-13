@@ -19,7 +19,7 @@ int main() {
     exit(EXIT_FAILURE);
   }
 
-  printf("Please, choose an option:\n");
+  printf("\nPlease, choose an option:\n");
   printf("1 - Init file system\n");
   printf("2 - Mount file system\n");
   printf("Exit - Ctrl + C\n");

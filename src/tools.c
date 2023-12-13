@@ -4,7 +4,9 @@
 #include <time.h>
 
 void fail(const char *msg) {
+  printf("\n\033[31m");
   perror(msg);
+  printf("\033[0m");
   exit(EXIT_FAILURE);
 }
 

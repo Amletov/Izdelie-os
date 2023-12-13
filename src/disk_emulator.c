@@ -29,7 +29,7 @@ int create_disk(int size, const char *file_name) {
 
   fsync(file_descriptor);
 
-  printf("\033[32mDisk created\033[0m\n");
+  printf("\033[32mDisk created\033[0m\n\n");
   return total_file_size;
 }
 
@@ -43,7 +43,7 @@ int mount_disk(const char *file_name) {
   stat(file_name, &st);
   total_file_size = st.st_size;
 
-  printf("\033[32mDisk mounted\033[0m: n \"%s\" s - %db\n", file_name,
+  printf("\033[32mDisk mounted\033[0m: n \"%s\" s - %db\n\n", file_name,
          total_file_size);
 
   return 0;
