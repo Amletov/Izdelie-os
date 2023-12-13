@@ -1,3 +1,4 @@
+#include "tools.h"
 #include <inode.h>
 #include <stdio.h>
 
@@ -17,6 +18,7 @@ void set_inode_dir_flag(inode_t *inode) { inode->mode |= I_DIR; }
 void set_inode_system_flag(inode_t *inode) { inode->mode |= I_SYS; }
 
 void display_inode(inode_t *inode) {
-  printf("\tINODE: id %d, s %d, fb %d, m %d\n", inode->id, inode->size,
-         inode->addreses[0], inode->mode);
+  char *creation_date = u64date_to_str(inode->ctime);
+  printf("\tINODE: id %d s %d fb %d m %d cd %s\n", inode->id, inode->size,
+         inode->adresses[0], inode->mode, creation_date);
 }

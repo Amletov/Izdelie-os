@@ -58,12 +58,15 @@ int init_fs(int size, const char *file_name)
         inode.id = i;
         for(int j = 0; j < 9; ++j)
         {
-            inode.addreses[j] = -1;
+            inode.adresses[j] = -1;
         }
         write_n((superblock.first_inode_block * BLOCK_SIZE) + i * sizeof(inode_t), sizeof(inode_t), (void *)&inode);
     }
+
+    return 0;
 }
 
 int load_fs()
 {
+    return 0;
 }

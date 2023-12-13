@@ -1,5 +1,5 @@
 #include <string.h>
-#include "../includes/dentry.h"
+#include "dentry.h"
 
 dentry_t create_dentry(int inode_id, int parent_inode_id, char * dentry_name)
 {

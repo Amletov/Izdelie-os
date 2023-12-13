@@ -3,10 +3,12 @@
 #include "inode.h"
 #include "shared.h"
 #include "superblock.h"
+#include "tools.h"
 #include <disk_emulator.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #define KRNL_ERROR -1
 #define KRNL_ERROR_OUT_OF_BLOCKS -2
@@ -21,7 +23,7 @@ int current_dir_items_count;
 char *get_path() { return current_dentry.name; }
 
 int relative_block(inode_t *inode, int offset) {
-  return inode->addreses[offset / BLOCK_SIZE];
+  return inode->adresses[offset / BLOCK_SIZE];
 }
 
 int save_inode(inode_t *inode) {
@@ -99,8 +101,9 @@ inode_t *allocate_inode() {
   inode_t *inode = malloc(sizeof(inode_t));
 
   inode->id = inode_id;
-  inode->addreses[0] = block_id;
+  inode->adresses[0] = block_id;
   inode->mode = 0;
+  inode->ctime = (u64)time(NULL);
 
   save_inode(inode);
   return inode;
@@ -156,7 +159,7 @@ int write_bytes(inode_t *inode, int offset, int size, void *buffer) {
     if (new_block_id == KRNL_ERROR_OUT_OF_BLOCKS) {
       return KRNL_ERROR_OUT_OF_BLOCKS;
     }
-    inode->addreses[offset / BLOCK_SIZE] = new_block_id;
+    inode->adresses[offset / BLOCK_SIZE] = new_block_id;
   }
 
   read_n(relative_block_id * BLOCK_SIZE, BLOCK_SIZE, block);
@@ -270,11 +273,8 @@ int init_kernel() {
 
   printf("\tAllocating inode\n");
   inode_t *root = allocate_inode();
-  printf("\tAllocated inode:\n\t\tid: %d\n\t\tflags: %d\n", root->id,
-         root->mode);
-  printf("\tSetting inode directory flag\n");
+  printf("\tSetting inode sys + dir flag\n");
   set_inode_dir_flag(root);
-  printf("\tSetting inode system flag\n");
   set_inode_system_flag(root);
   printf("\tSaving inode\n");
   save_inode(root);
@@ -282,7 +282,7 @@ int init_kernel() {
   current_dentry = create_dentry(root->id, -1, "ROOT");
   printf("\tSaving directory\n");
   save_directory(&current_dentry, 0, current_dir_items);
-  printf("COMPLETE KERNEL INIT!\n");
+  printf("\033[32mComplete kernel initialization!\033[0m\n");
   free(root);
 
   return 0;
@@ -290,11 +290,11 @@ int init_kernel() {
 
 int mkdir(int argc, char **argv) {
   printf("mkdir\n\t");
-  int inode_id= mkfile(argc, argv);
+  int inode_id = mkfile(argc, argv);
   if (inode_id == ARG_ERROR) {
     return ARG_ERROR;
   }
-  printf("inode_id=%d\n", inode_id);
+
   inode_t *inode = get_inode(inode_id);
   set_inode_dir_flag(inode);
   save_inode(inode);
@@ -306,7 +306,7 @@ int mkdir(int argc, char **argv) {
 int mkfile(int argc, char **argv) {
   printf("mkfile\n");
   if (argc < 2) {
-    printf("USAGE: mkfile <path_to_file>\n");
+    printf("USAGE: mkfile/mkdir <path_to_file>\n");
     return ARG_ERROR;
   }
 
@@ -322,7 +322,7 @@ int mkfile(int argc, char **argv) {
   current_dir_items[current_dir_items_count++] =
       create_dentry(inode->id, current_dentry.inode_id, argv[1]);
   save_directory(&current_dentry, current_dir_items_count, current_dir_items);
-  
+
   display_inode(inode);
   free(inode);
 
@@ -346,14 +346,16 @@ int sb(int argc, char **argv) {
 
 int ls(int argc, char **argv) {
   read_directory(&current_dentry, &current_dir_items_count, current_dir_items);
-  printf("inode_id\tname\tsize\tmode\n");
+  printf("inode_id\tname\tsize\tmode\tcreation_date\n");
 
   for (int i = 0; i < current_dir_items_count; ++i) {
     inode_t *inode = get_inode(current_dir_items[i].inode_id);
+    char* creation_date = u64date_to_str(inode->ctime);
     printf("%d\t", inode->id);
     printf("\t%s", current_dir_items[i].name);
     printf("\t%db", inode->size);
     printf("\t%d", inode->mode);
+    printf("\t%s", creation_date);
     printf("\n");
     free(inode);
   }

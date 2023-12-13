@@ -15,7 +15,7 @@ typedef struct inode
     u64 mtime;          // Дата и время создания файла
     u64 ctime;          // Дата и время модификации файла
     u32 file_blocks;    // Число блоков, занимаемых, занимаемых файлом
-    u32 addreses[9];    // Массив адресов 
+    u32 adresses[9];    // Массив адресов 
 } inode_t;
 
 int set_inode_mode(inode_t *inode, int owner_permissions, int others_permissions);
