@@ -158,6 +158,7 @@ int write_bytes(inode_t *inode, int offset, int size, void *buffer) {
   }
 
   if (offset == 0) {
+    printf("offset = 0 (write_bytes)\n");
     inode->size = 0;
   }
 
@@ -181,6 +182,7 @@ int write_bytes(inode_t *inode, int offset, int size, void *buffer) {
   int relative_offset = offset % BLOCK_SIZE;
   int available_space;
   if (size > BLOCK_SIZE - relative_offset) {
+    printf("size(%d) > 512 - rel_of(%d)\n", size, relative_offset);
     available_space = BLOCK_SIZE - relative_offset;
   } else {
     available_space = size - relative_offset;
@@ -188,6 +190,7 @@ int write_bytes(inode_t *inode, int offset, int size, void *buffer) {
   write_n(relative_block_id * BLOCK_SIZE + relative_offset, available_space,
           buffer);
 
+  printf("size(%d) += avail_sp(%d)\n", inode->size, available_space);
   inode->size += available_space;
   inode->mtime = (u64)time(NULL);
   save_inode(inode);
@@ -544,4 +547,26 @@ int w(int argc, char **argv) {
 
   return 0;
 }
-int app(int argc, char **argv) {}
+int app(int argc, char **argv) {
+  if (argc < 2) {
+    printf("USAGE: w file\n");
+    return -1;
+  }
+
+  int inode_id = find_by_name(argv[1]);
+  if (inode_id == -1) {
+    inode_id = mkfile(argc, argv);
+  }
+
+  inode_t *inode = get_inode(inode_id);
+  if ((inode->mode & I_DIR) != 0) {
+    printf("Cannot write to a dir\n");
+    return -1;
+  }
+
+  char *input = uinput();
+  write_bytes(inode, inode->size - 1, inode->size + strlen(input) + 1, input);
+  free(input);
+
+  return 0;
+}
