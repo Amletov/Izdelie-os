@@ -10,6 +10,10 @@ int mv(int argc, char **argv);
 int rm(int argc, char **argv);
 int cp(int argc, char **argv);
 int sb(int argc, char **argv);
+int r(int argc, char **argv);
+int w(int argc, char **argv);
+int app(int argc, char **argv);
+
 void get_path();
 
 #endif

@@ -1,5 +1,5 @@
-#include "terminal.h"
-#include "kernel.h"
+#include "../includes/terminal.h"
+#include "../includes/kernel.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -75,6 +75,12 @@ int run() {
       mkdir(argc, argv);
     } else if (strcmp(argv[0], "cd") == 0) {
       cd(argc, argv);
+    } else if (strcmp(argv[0], "r") == 0) {
+      r(argc, argv);
+    } else if (strcmp(argv[0], "w") == 0) {
+      w(argc, argv);
+    } else if (strcmp(argv[0], "app") == 0) {
+      app(argc, argv);
     } else {
       printf("\033[31mERROR: unknown command \"%s\"\033[0m", argv[0]);
     }

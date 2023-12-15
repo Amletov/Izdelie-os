@@ -410,6 +410,7 @@ int ls(int argc, char **argv) {
 int find_by_name(char *name) {
   for (int i = 0; i < current_dir_items_count; ++i) {
     if (strcmp(current_dir_items[i].name, name) == 0) {
+      printf("Found %s in %d\n", name, current_dentry.name);
       return current_dir_items[i].inode_id;
     }
   }
@@ -493,3 +494,54 @@ int cd(int argc, char **argv) {
 
   return 0;
 }
+
+int r(int argc, char **argv) {
+  if (argc < 2) {
+    printf("USAGE: r file\n");
+    return -1;
+  }
+
+  int inode_id = find_by_name(argv[1]);
+  if (inode_id == -1) {
+    printf("current dir doesnt contains %s\n", argv[1]);
+    return -1;
+  }
+
+  inode_t *inode = get_inode(inode_id);
+  if ((inode->mode & I_DIR) != 0) {
+    printf("Cannot read a dir\n");
+    return -1;
+  }
+
+  char *buffer = malloc(inode->size);
+  read_bytes(inode, 0, buffer);
+
+  printf("size: %d\n", inode->size);
+  printf("%s", buffer);
+  free(buffer);
+  return 0;
+}
+int w(int argc, char **argv) {
+  if (argc < 2) {
+    printf("USAGE: w file\n");
+    return -1;
+  }
+
+  int inode_id = find_by_name(argv[1]);
+  if (inode_id == -1) {
+    inode_id = mkfile(argc, argv);
+  }
+
+  inode_t *inode = get_inode(inode_id);
+  if ((inode->mode & I_DIR) != 0) {
+    printf("Cannot write to a dir\n");
+    return -1;
+  }
+
+  char *input = uinput();
+  write_bytes(inode, 0, strlen(input) + 1, input);
+  free(input);
+
+  return 0;
+}
+int app(int argc, char **argv) {}
