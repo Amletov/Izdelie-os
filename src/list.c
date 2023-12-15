@@ -1,8 +1,15 @@
-#include "list.h"
+#include "../includes/list.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+
+node_t *create_node(char *name) {
+  node_t *n = malloc(sizeof(node_t));
+  strcpy(n->name, name);
+  n->next = NULL;
+  return n;
+}
 
 void push(node_t *head, char *name) {
   node_t *current = head;
@@ -43,15 +50,12 @@ void display_list(node_t *head) {
   }
 }
 
-char *list_to_str(node_t *head) {
-  
-  node_t *current = head;
-  char *list;
-  while (current->next != NULL) {
-    strcat(list, current->name);
-    strcat(list, "/");
-    current = current->next;
-  }   
+void print_list(node_t *head, char delim) {
 
-  return list;
-} 
+  node_t *current = head;
+  while (current != NULL) {
+
+    printf("%s%c", current->name, delim);
+    current = current->next;
+  }
+}

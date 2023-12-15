@@ -6,9 +6,11 @@ typedef struct node {
   struct node *next;
 } node_t;
 
+node_t *create_node(char *name);
+
 void push(node_t *head, char *name);
 int remove_last(node_t *head);
 void display_list(node_t *head);
-char *list_to_str(node_t *head);
+void print_list(node_t *head, char delim);
 
 #endif

@@ -1,11 +1,11 @@
-#include "kernel.h"
-#include "dentry.h"
-#include "inode.h"
-#include "list.h"
-#include "shared.h"
-#include "superblock.h"
-#include "tools.h"
-#include <disk_emulator.h>
+#include "../includes/kernel.h"
+#include "../includes/dentry.h"
+#include "../includes/disk_emulator.h"
+#include "../includes/inode.h"
+#include "../includes/list.h"
+#include "../includes/shared.h"
+#include "../includes/superblock.h"
+#include "../includes/tools.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -22,13 +22,7 @@ superblock_t superblock;
 int current_dir_items_count;
 node_t *head = NULL;
 
-char *get_path() {
-  char *path;
-  strcpy(head->name, current_dentry.name);
-  path = list_to_str(head);
-
-  return path;
-}
+void get_path() { print_list(head, '/'); }
 
 int relative_block(inode_t *inode, int offset) {
   return inode->adresses[offset / BLOCK_SIZE];
@@ -219,10 +213,6 @@ int read_directory(dentry_t *dentry, dentry_t *items) {
   char buffer[inode->size];
   printf("\tReading directory content\n");
   int read_b = read_bytes_start(inode, buffer);
-  // for (char *bp = buffer; bp != NULL; ++bp) {
-  //   printf("%d ", (int)*bp);
-  // }
-  // printf("\n");
   char *p = buffer;
   printf("\tRead bytes: %db\n", read_b);
   memcpy(&dentry->inode_id, p, sizeof(int));
@@ -287,6 +277,7 @@ int init_kernel() {
   if (superblock.magic_number != MAGIC_NUMBER) {
     return KRNL_ERROR;
   }
+
   printf("\tAllocating system blocks\n");
   for (int i = 0; i < superblock.first_block; i++) {
     allocate_block();
@@ -305,13 +296,9 @@ int init_kernel() {
   save_directory(&current_dentry, 0, current_dir_items);
   printf("\033[32m\nComplete kernel initialization!\033[0m\n");
 
-  head = (node_t *)malloc(sizeof(node_t));
-  head->next = NULL;
-
-  strcpy(head->name, current_dentry.name);
+  head = create_node(current_dentry.name);
 
   free(root);
-
   return 0;
 }
 
@@ -393,20 +380,37 @@ int ls(int argc, char **argv) {
   return 0;
 }
 
-int set_current_dir(char *name) {
+// Returns inode_id, or -1
+int find_by_name(char *name) {
   for (int i = 0; i < current_dir_items_count; ++i) {
-    if (strcmp(name, current_dir_items[i].name) == 0) {
-      inode_t *inode = get_inode(current_dir_items[i].inode_id);
-      if ((inode->mode & I_DIR) != 0) {
-        current_dentry = current_dir_items[i];
-        current_dir_items_count  =
-            read_directory(&current_dentry, current_dir_items);
-      }
-      free(inode);
+    if (strcmp(current_dir_items[i].name, name) == 0) {
+      return current_dir_items[i].inode_id;
     }
   }
-
   return -1;
+}
+
+int set_current_dir(char *name) {
+
+  int inode_id = find_by_name(name);
+  if (inode_id == -1) {
+    printf("Dentry '%s' doesn't exists\n", name);
+    return -1;
+  }
+
+  inode_t *inode = get_inode(inode_id);
+  if ((inode->mode & I_DIR) == 0) {
+    printf("Is not a directory\n");
+    return -1;
+  }
+
+  dentry_t temp_dentry = create_dentry(inode_id, current_dentry.inode_id, name);
+
+  current_dir_items_count = read_directory(&temp_dentry, current_dir_items);
+
+  memcpy(&current_dentry, &temp_dentry, sizeof(dentry_t));
+
+  return 0;
 }
 
 int cd(int argc, char **argv) {
