@@ -228,6 +228,11 @@ int read_directory(dentry_t *dentry, dentry_t *items) {
   p += sizeof(int);
   printf("\tNitems copied - %d\n", nitems);
 
+  if (nitems == 0) {
+    free(inode);
+    return 0;
+  }
+
   items = realloc(items, sizeof(dentry_t) * (nitems));
 
   for (int i = 0; i < nitems; i++) {
@@ -244,7 +249,8 @@ int read_directory(dentry_t *dentry, dentry_t *items) {
 }
 
 int save_directory(dentry_t *dentry, int nitems, dentry_t *items) {
-  int buffer_size = 4 + 4 + 12 + nitems * (4 + 12) + 4;
+  int buffer_size = 4 + 4 + 12 + 4 + nitems * (4 + 12);
+  printf("buffer_size = %d\n", buffer_size);
   char buffer[buffer_size];
   char *p = buffer;
   memcpy(p, &dentry->inode_id, sizeof(int));
@@ -314,6 +320,12 @@ int mkdir(int argc, char **argv) {
   save_inode(inode);
   display_inode(inode);
 
+  dentry_t d = create_dentry(inode->id, current_dentry.inode_id, argv[1]);
+
+  save_directory(&d, 0, NULL);
+
+  free(inode);
+
   return 0;
 }
 
@@ -362,6 +374,16 @@ int ls(int argc, char **argv) {
   current_dir_items_count = read_directory(&current_dentry, current_dir_items);
   printf("inode_id\tname\tsize\tmode\tcreation_date\tmodification_date\n");
 
+  inode_t *i = get_inode(current_dentry.inode_id);
+  printf("%d\t.\t%db\t%d\t%s\t%s\n", i->id, i->size, i->mode,
+         u64date_to_str(i->ctime), u64date_to_str(i->mtime));
+  if (current_dentry.inode_id != 0) {
+    inode_t *i = get_inode(current_dentry.parent_inode_id);
+    printf("%d\t..\t%db\t%d\t%s\t%s\n", i->id, i->size, i->mode,
+           u64date_to_str(i->ctime), u64date_to_str(i->mtime));
+  }
+  free(i);
+
   for (int i = 0; i < current_dir_items_count; ++i) {
     inode_t *inode = get_inode(current_dir_items[i].inode_id);
     char *creation_date = u64date_to_str(inode->ctime);
@@ -392,6 +414,9 @@ int find_by_name(char *name) {
 
 int set_current_dir(char *name) {
 
+  const char *op = "set_current_dir";
+  printf("Input name: %s (%s)", name, op);
+
   int inode_id = find_by_name(name);
   if (inode_id == -1) {
     printf("Dentry '%s' doesn't exists\n", name);
@@ -405,11 +430,14 @@ int set_current_dir(char *name) {
   }
 
   dentry_t temp_dentry = create_dentry(inode_id, current_dentry.inode_id, name);
+  printf("created %d %d %s at (%s)\n", temp_dentry.inode_id,
+         temp_dentry.parent_inode_id, temp_dentry.name, op);
 
   current_dir_items_count = read_directory(&temp_dentry, current_dir_items);
-
+  printf("got a %d dentries in it (%s)\n", current_dir_items_count, op);
   memcpy(&current_dentry, &temp_dentry, sizeof(dentry_t));
-
+  printf("dentry copied %d %d %s (%s)\n", current_dentry.inode_id,
+         current_dentry.parent_inode_id, current_dentry.name, op);
   return 0;
 }
 

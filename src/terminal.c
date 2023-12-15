@@ -57,7 +57,9 @@ int run() {
   int argc;
 
   while (is_running) {
+    printf("\n");
     get_path();
+    printf(" > ");
     fgets(prompt, MEM_SIZE, stdin);
     argv = parsed_args(prompt, &argc);
     if (argc < 1) {
