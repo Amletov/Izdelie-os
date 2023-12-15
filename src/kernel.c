@@ -157,6 +157,10 @@ int write_bytes(inode_t *inode, int offset, int size, void *buffer) {
     return KRNL_ERROR;
   }
 
+  if (offset == 0) {
+    inode->size = 0;
+  }
+
   // for (int i = 0; i < size; ++i) {
   //   printf("%d ", (int)*(char *)(buffer + i));
   // }
@@ -192,8 +196,6 @@ int write_bytes(inode_t *inode, int offset, int size, void *buffer) {
     write_bytes(inode, offset + available_space, size - available_space,
                 buffer + available_space);
   }
-
-  // c
 
   return 0;
 }
@@ -415,8 +417,27 @@ int find_by_name(char *name) {
 }
 
 int set_current_dir(char *name) {
-
   const char *op = "set_current_dir";
+
+  if (strcmp(name, ".") == 0) {
+    return 0;
+  } else if (strcmp(name, "..") == 0) {
+    if (current_dentry.inode_id == 0) {
+      return 0;
+    }
+    dentry_t temp_dentry =
+        create_dentry(current_dentry.parent_inode_id, -1, name);
+    // printf("created %d %d %s at (%s)\n", temp_dentry.inode_id,
+    //        temp_dentry.parent_inode_id, temp_dentry.name, op);
+
+    current_dir_items_count = read_directory(&temp_dentry, current_dir_items);
+    // printf("got a %d dentries in it (%s)\n", current_dir_items_count, op);
+    memcpy(&current_dentry, &temp_dentry, sizeof(dentry_t));
+    printf("dentry copied %d %d %s (%s)\n", current_dentry.inode_id,
+           current_dentry.parent_inode_id, current_dentry.name, op);
+    return 0;
+  }
+
   printf("Input name: %s (%s)", name, op);
 
   int inode_id = find_by_name(name);
@@ -440,6 +461,7 @@ int set_current_dir(char *name) {
   memcpy(&current_dentry, &temp_dentry, sizeof(dentry_t));
   printf("dentry copied %d %d %s (%s)\n", current_dentry.inode_id,
          current_dentry.parent_inode_id, current_dentry.name, op);
+
   return 0;
 }
 
