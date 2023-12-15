@@ -8,5 +8,5 @@ int align(int raw_size);
 char *u64date_to_str(u64 u64_date);
 char *concat(const char *s1, const char *s2);
 char *uinput();
-
+char *read_string();
 #endif

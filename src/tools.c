@@ -73,3 +73,22 @@ char *uinput() {
   string[counter - 1] = '\0';
   return string;
 }
+
+char *read_string() {
+  char *big = NULL, *old_big;
+  char s[11] = {0};
+  int len = 0, old_len;
+
+  do {
+    old_len = len;
+    old_big = big;
+    scanf("%10[^\n]", s);
+    if (!(big = realloc(big, (len += strlen(s)) + 1))) {
+      free(old_big);
+      fprintf(stderr, "Out of memory!\n");
+      return NULL;
+    }
+    strcpy(big + old_len, s);
+  } while (len - old_len == 10);
+  return big;
+}

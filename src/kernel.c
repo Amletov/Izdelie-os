@@ -158,7 +158,7 @@ int write_bytes(inode_t *inode, int offset, int size, void *buffer) {
   }
 
   if (offset == 0) {
-    printf("offset = 0 (write_bytes)\n");
+    // printf("offset = 0 (write_bytes)\n");
     inode->size = 0;
   }
 
@@ -182,7 +182,7 @@ int write_bytes(inode_t *inode, int offset, int size, void *buffer) {
   int relative_offset = offset % BLOCK_SIZE;
   int available_space;
   if (size > BLOCK_SIZE - relative_offset) {
-    printf("size(%d) > 512 - rel_of(%d)\n", size, relative_offset);
+    // printf("size(%d) > 512 - rel_of(%d)\n", size, relative_offset);
     available_space = BLOCK_SIZE - relative_offset;
   } else {
     available_space = size - relative_offset;
@@ -195,6 +195,7 @@ int write_bytes(inode_t *inode, int offset, int size, void *buffer) {
   inode->mtime = (u64)time(NULL);
   save_inode(inode);
 
+  printf("'%s' written to %d inode\n", buffer, inode->id);
   if (available_space + size > BLOCK_SIZE - relative_offset) {
     write_bytes(inode, offset + available_space, size - available_space,
                 buffer + available_space);
@@ -541,9 +542,21 @@ int w(int argc, char **argv) {
     return -1;
   }
 
-  char *input = uinput();
-  write_bytes(inode, 0, strlen(input) + 1, input);
-  free(input);
+  char *input = NULL, *result = "";
+
+  do {
+    input = uinput();
+    if (strcmp(input, ":q") == 0) {
+      break;
+    }
+    result = concat(result, input);
+    result = concat(result, "\n");
+
+  } while (strcmp(input, ":q") != 0);
+  // memcpy(result, result + 1, strlen(result));
+  write_bytes(inode, 0, strlen(result) + 1, result);
+  // free(input);
+  // free(result);
 
   return 0;
 }
@@ -564,9 +577,21 @@ int app(int argc, char **argv) {
     return -1;
   }
 
-  char *input = uinput();
-  write_bytes(inode, inode->size - 1, inode->size + strlen(input) + 1, input);
-  free(input);
+  char *input = NULL, *result = "";
+
+  do {
+    input = uinput();
+    if (strcmp(input, ":q") == 0) {
+      break;
+    }
+    result = concat(result, input);
+    result = concat(result, "\n");
+
+  } while (strcmp(input, ":q") != 0);
+
+  // memcpy(result, result, strlen(result) - 2);
+  write_bytes(inode, inode->size - 2, inode->size + strlen(input) + 1, result);
+  // free(input);
 
   return 0;
 }
