@@ -71,6 +71,8 @@ int run() {
       ls(argc, argv);
     } else if (strcmp(argv[0], "mkdir") == 0) {
       mkdir(argc, argv);
+    } else if (strcmp(argv[0], "cd") == 0) {
+      cd(argc, argv);
     } else {
       printf("\033[31mERROR: unknown command \"%s\"\033[0m", argv[0]);
     }

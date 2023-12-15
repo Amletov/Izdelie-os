@@ -1,6 +1,7 @@
 #include "kernel.h"
 #include "dentry.h"
 #include "inode.h"
+#include "list.h"
 #include "shared.h"
 #include "superblock.h"
 #include "tools.h"
@@ -19,8 +20,15 @@ dentry_t current_dentry;
 dentry_t *current_dir_items;
 superblock_t superblock;
 int current_dir_items_count;
+node_t *head = NULL;
 
-char *get_path() { return current_dentry.name; }
+char *get_path() {
+  char *path;
+  strcpy(head->name, current_dentry.name);
+  path = list_to_str(head);
+
+  return path;
+}
 
 int relative_block(inode_t *inode, int offset) {
   return inode->adresses[offset / BLOCK_SIZE];
@@ -155,9 +163,9 @@ int write_bytes(inode_t *inode, int offset, int size, void *buffer) {
     return KRNL_ERROR;
   }
 
-  for (int i = 0; i < size; ++i) {
-    printf("%d ", (int)*(char *)(buffer + i));
-  }
+  // for (int i = 0; i < size; ++i) {
+  //   printf("%d ", (int)*(char *)(buffer + i));
+  // }
 
   char block[BLOCK_SIZE];
   int relative_block_id = relative_block(inode, offset);
@@ -296,6 +304,12 @@ int init_kernel() {
   printf("\tSaving directory\n");
   save_directory(&current_dentry, 0, current_dir_items);
   printf("\033[32m\nComplete kernel initialization!\033[0m\n");
+
+  head = (node_t *)malloc(sizeof(node_t));
+  head->next = NULL;
+
+  strcpy(head->name, current_dentry.name);
+
   free(root);
 
   return 0;
@@ -375,6 +389,47 @@ int ls(int argc, char **argv) {
     printf("\n");
     free(inode);
   }
+
+  return 0;
+}
+
+int set_current_dir(char *name) {
+  for (int i = 0; i < current_dir_items_count; ++i) {
+    if (strcmp(name, current_dir_items[i].name) == 0) {
+      inode_t *inode = get_inode(current_dir_items[i].inode_id);
+      if ((inode->mode & I_DIR) != 0) {
+        current_dentry = current_dir_items[i];
+        current_dir_items_count  =
+            read_directory(&current_dentry, current_dir_items);
+      }
+      free(inode);
+    }
+  }
+
+  return -1;
+}
+
+int cd(int argc, char **argv) {
+  // printf("cd\n");
+  if (argc < 2) {
+    printf("\033[31mUSAGE: cd <path>\033[0m\n");
+    return ARG_ERROR;
+  }
+
+  char *token;
+  char *copy = strdup(argv[1]);
+
+  token = strtok(copy, "/");
+
+  while (token != NULL) {
+    if (set_current_dir(token) == -1) {
+      printf("\033[31mERROR: directory \"%s\" does not exist\033[0m\n", token);
+      return -1;
+    }
+    token = strtok(NULL, "/");
+  }
+
+  free(copy);
 
   return 0;
 }
