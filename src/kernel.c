@@ -193,6 +193,8 @@ int write_bytes(inode_t *inode, int offset, int size, void *buffer) {
                 buffer + available_space);
   }
 
+  // c
+
   return 0;
 }
 
