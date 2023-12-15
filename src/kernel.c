@@ -435,6 +435,8 @@ int set_current_dir(char *name) {
     memcpy(&current_dentry, &temp_dentry, sizeof(dentry_t));
     printf("dentry copied %d %d %s (%s)\n", current_dentry.inode_id,
            current_dentry.parent_inode_id, current_dentry.name, op);
+
+    remove_last(head);
     return 0;
   }
 
@@ -461,6 +463,8 @@ int set_current_dir(char *name) {
   memcpy(&current_dentry, &temp_dentry, sizeof(dentry_t));
   printf("dentry copied %d %d %s (%s)\n", current_dentry.inode_id,
          current_dentry.parent_inode_id, current_dentry.name, op);
+
+  push(head, name);
 
   return 0;
 }
