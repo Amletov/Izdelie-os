@@ -1,9 +1,12 @@
 #include "../includes/terminal.h"
 #include "../includes/kernel.h"
 #include <ctype.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #define MEM_SIZE 1024
 
@@ -81,6 +84,10 @@ int run() {
       w(argc, argv);
     } else if (strcmp(argv[0], "app") == 0) {
       app(argc, argv);
+    } else if (strcmp(argv[0], "exit") == 0) {
+      is_running = 0;
+    } else if (strcmp(argv[0], "clear") == 0) {
+      system("clear");
     } else {
       printf("\033[31mERROR: unknown command \"%s\"\033[0m", argv[0]);
     }
