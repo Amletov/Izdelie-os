@@ -209,7 +209,7 @@ inode_t *get_inode(int inode_id) {
   int offset =
       superblock.first_inode_block * BLOCK_SIZE + inode_id * sizeof(inode_t);
   inode_t *inode = malloc(sizeof(inode_t));
-  read_n(offset, sizeof(inode_t), inode);
+  read_n(offset, sizeof(inode_t), (char *)inode);
   display_inode(inode);
 
   return inode;
@@ -382,15 +382,15 @@ int ls(int argc, char **argv) {
   current_dir_items_count = read_directory(&current_dentry, current_dir_items);
   printf("inode_id\tname\tsize\tmode\tcreation_date\tmodification_date\n");
 
-  inode_t *i = get_inode(current_dentry.inode_id);
-  printf("%d\t.\t%db\t%d\t%s\t%s\n", i->id, i->size, i->mode,
-         u64date_to_str(i->ctime), u64date_to_str(i->mtime));
+  inode_t *inode = get_inode(current_dentry.inode_id);
+  printf("%d\t\t.\t%db\t%d\t%s\t%s\n", inode->id, inode->size, inode->mode,
+         u64date_to_str(inode->ctime), u64date_to_str(inode->mtime));
   if (current_dentry.inode_id != 0) {
     inode_t *i = get_inode(current_dentry.parent_inode_id);
-    printf("%d\t..\t%db\t%d\t%s\t%s\n", i->id, i->size, i->mode,
+    printf("%d\t\t..\t%db\t%d\t%s\t%s\n", i->id, i->size, i->mode,
            u64date_to_str(i->ctime), u64date_to_str(i->mtime));
   }
-  free(i);
+  free(inode);
 
   for (int i = 0; i < current_dir_items_count; ++i) {
     inode_t *inode = get_inode(current_dir_items[i].inode_id);
@@ -410,14 +410,14 @@ int ls(int argc, char **argv) {
   return 0;
 }
 
-// Returns inode_id, or -1
 int find_by_name(char *name) {
   for (int i = 0; i < current_dir_items_count; ++i) {
     if (strcmp(current_dir_items[i].name, name) == 0) {
-      printf("Found %s in %d\n", name, current_dentry.name);
+      // printf("Found %s in %s\n", name, current_dentry.name);
       return current_dir_items[i].inode_id;
     }
   }
+
   return -1;
 }
 
@@ -436,7 +436,7 @@ int set_current_dir(char *name) {
     //        temp_dentry.parent_inode_id, temp_dentry.name, op);
 
     current_dir_items_count = read_directory(&temp_dentry, current_dir_items);
-    // printf("got a %d dentries in it (%s)\n", current_dir_items_count, op);
+    // printf("got a %d dentry in it (%s)\n", current_dir_items_count, op);
     memcpy(&current_dentry, &temp_dentry, sizeof(dentry_t));
     printf("dentry copied %d %d %s (%s)\n", current_dentry.inode_id,
            current_dentry.parent_inode_id, current_dentry.name, op);
@@ -445,29 +445,29 @@ int set_current_dir(char *name) {
     return 0;
   }
 
-  printf("Input name: %s (%s)", name, op);
+  // printf("Input name: %s (%s)", name, op);
 
   int inode_id = find_by_name(name);
   if (inode_id == -1) {
-    printf("Dentry '%s' doesn't exists\n", name);
+    printf("\033[31mERROR: dentry '%s' does not exists\033[0m\n", name);
     return -1;
   }
 
   inode_t *inode = get_inode(inode_id);
   if ((inode->mode & I_DIR) == 0) {
-    printf("Is not a directory\n");
+    printf("\033[31m '%s' is not a directory\n", name);
     return -1;
   }
 
   dentry_t temp_dentry = create_dentry(inode_id, current_dentry.inode_id, name);
-  printf("created %d %d %s at (%s)\n", temp_dentry.inode_id,
-         temp_dentry.parent_inode_id, temp_dentry.name, op);
+  // printf("created %d %d %s at (%s)\n", temp_dentry.inode_id,
+  //        temp_dentry.parent_inode_id, temp_dentry.name, op);
 
   current_dir_items_count = read_directory(&temp_dentry, current_dir_items);
-  printf("got a %d dentries in it (%s)\n", current_dir_items_count, op);
+  // printf("got a %d dentries in it (%s)\n", current_dir_items_count, op);
   memcpy(&current_dentry, &temp_dentry, sizeof(dentry_t));
-  printf("dentry copied %d %d %s (%s)\n", current_dentry.inode_id,
-         current_dentry.parent_inode_id, current_dentry.name, op);
+  // printf("dentry copied %d %d %s (%s)\n", current_dentry.inode_id,
+  //        current_dentry.parent_inode_id, current_dentry.name, op);
 
   push(head, name);
 
@@ -501,19 +501,19 @@ int cd(int argc, char **argv) {
 
 int r(int argc, char **argv) {
   if (argc < 2) {
-    printf("USAGE: r file\n");
-    return -1;
+    printf("\033[31mUSAGE: r <file>\033[0m\n");
+    return ARG_ERROR;
   }
 
   int inode_id = find_by_name(argv[1]);
   if (inode_id == -1) {
-    printf("current dir doesnt contains %s\n", argv[1]);
+    printf("\033[31mERROR: current dir does not contains %s\033[0m\n", argv[1]);
     return -1;
   }
 
   inode_t *inode = get_inode(inode_id);
   if ((inode->mode & I_DIR) != 0) {
-    printf("Cannot read a dir\n");
+    printf("\033[0mERROR: cannot read a dir\033[0m\n");
     return -1;
   }
 
@@ -525,10 +525,11 @@ int r(int argc, char **argv) {
   free(buffer);
   return 0;
 }
+
 int w(int argc, char **argv) {
   if (argc < 2) {
-    printf("USAGE: w file\n");
-    return -1;
+    printf("\033[31mUSAGE: p <file>\033[0m\n");
+    return ARG_ERROR;
   }
 
   int inode_id = find_by_name(argv[1]);
@@ -538,7 +539,7 @@ int w(int argc, char **argv) {
 
   inode_t *inode = get_inode(inode_id);
   if ((inode->mode & I_DIR) != 0) {
-    printf("Cannot write to a dir\n");
+    printf("\033[31mERROR: cannot write to a dir\033[0m\n");
     return -1;
   }
 
@@ -553,17 +554,17 @@ int w(int argc, char **argv) {
     result = concat(result, "\n");
 
   } while (strcmp(input, ":q") != 0);
-  // memcpy(result, result + 1, strlen(result));
+
+  inode->mtime = (u64)time(NULL);
   write_bytes(inode, 0, strlen(result) + 1, result);
-  // free(input);
-  // free(result);
 
   return 0;
 }
+
 int app(int argc, char **argv) {
   if (argc < 2) {
-    printf("USAGE: w file\n");
-    return -1;
+    printf("\033[31mUSAGE: app <file>\n\033[0m");
+    return ARG_ERROR;
   }
 
   int inode_id = find_by_name(argv[1]);
@@ -573,7 +574,7 @@ int app(int argc, char **argv) {
 
   inode_t *inode = get_inode(inode_id);
   if ((inode->mode & I_DIR) != 0) {
-    printf("Cannot write to a dir\n");
+    printf("\033[31mERROR: cannot write to a dir\n\033[0m");
     return -1;
   }
 
@@ -589,9 +590,8 @@ int app(int argc, char **argv) {
 
   } while (strcmp(input, ":q") != 0);
 
-  // memcpy(result, result, strlen(result) - 2);
+  inode->mtime = (u64)time(NULL);
   write_bytes(inode, inode->size - 2, inode->size + strlen(input) + 1, result);
-  // free(input);
 
   return 0;
 }
